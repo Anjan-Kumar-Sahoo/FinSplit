@@ -78,3 +78,59 @@ def add_expense(request):
 
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+# 🟢 Pool-Level Summary
+def get_pool_summary(request, pool_id):
+    try:
+        pool = Pool.objects.get(id=pool_id)
+        splits = BillSplit.objects.filter(bill__pool=pool, is_settled=False)
+
+        summary = []
+        for split in splits:
+            summary.append({
+                "owed_by": split.owed_by.upi_id,
+                "owed_to": split.owed_to.upi_id,
+                "amount": float(split.amount),
+                "bill_title": split.bill.title
+            })
+
+        return JsonResponse({
+            "pool": pool.name,
+            "summary": summary
+        })
+
+    except Pool.DoesNotExist:
+        return JsonResponse({"error": "Pool not found"}, status=404)
+
+# 🟢 User-Level Summary
+def get_user_summary(request, upi_id):
+    try:
+        user = User.objects.get(upi_id=upi_id)
+
+        gets_from = BillSplit.objects.filter(owed_to=user, is_settled=False)
+        owes_to = BillSplit.objects.filter(owed_by=user, is_settled=False)
+
+        gets = []
+        for g in gets_from:
+            gets.append({
+                "from": g.owed_by.upi_id,
+                "amount": float(g.amount),
+                "bill": g.bill.title
+            })
+
+        owes = []
+        for o in owes_to:
+            owes.append({
+                "to": o.owed_to.upi_id,
+                "amount": float(o.amount),
+                "bill": o.bill.title
+            })
+
+        return JsonResponse({
+            "upi_id": user.upi_id,
+            "gets_from": gets,
+            "owes_to": owes
+        })
+
+    except User.DoesNotExist:
+        return JsonResponse({"error": "User not found"}, status=404)
