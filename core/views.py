@@ -4,7 +4,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
-from .models import User, Pool, Bill, BillSplit
+from .models import User, Pool, Bill, BillSplit, PoolMember
 
 @csrf_exempt
 def add_expense(request):
@@ -134,3 +134,104 @@ def get_user_summary(request, upi_id):
 
     except User.DoesNotExist:
         return JsonResponse({"error": "User not found"}, status=404)
+
+def verify_upi_id(upi_id):
+    # Simulated UPI check: must end with '@upi'
+    return upi_id.endswith('@upi')
+
+@csrf_exempt
+def create_user(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        upi_id = data.get('upi_id')
+
+        if not verify_upi_id(upi_id):
+            return JsonResponse({'error': 'Invalid UPI ID'}, status=400)
+
+        user, created = User.objects.get_or_create(upi_id=upi_id)
+
+        return JsonResponse({
+            'upi_id': user.upi_id,
+            'created': created
+        })
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@csrf_exempt
+def add_pool_member(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        pool_id = data.get('pool_id')
+        upi_id = data.get('upi_id')
+
+        if not verify_upi_id(upi_id):
+            return JsonResponse({'error': 'Invalid UPI ID'}, status=400)
+
+        user = User.objects.get(upi_id=upi_id)
+        pool = Pool.objects.get(id=pool_id)
+
+        PoolMember.objects.get_or_create(user=user, pool=pool)
+
+        return JsonResponse({'message': f'{upi_id} added to pool {pool.name}'})
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+from decimal import Decimal
+
+@csrf_exempt
+def settle_debt(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        owed_by_upi = data.get('owed_by')
+        owed_to_upi = data.get('owed_to')
+        amount = Decimal(str(data.get('amount')))
+
+        owed_by = User.objects.get(upi_id=owed_by_upi)
+        owed_to = User.objects.get(upi_id=owed_to_upi)
+
+        splits = BillSplit.objects.filter(
+            owed_by=owed_by,
+            owed_to=owed_to,
+            is_settled=False
+        ).order_by('id')
+
+        total = Decimal('0')
+        updated = []
+
+        for split in splits:
+            if total >= amount:
+                break
+
+            split_amt = Decimal(str(split.amount))
+
+            if total + split_amt <= amount:
+                split.is_settled = True
+                split.save()
+                total += split_amt
+                updated.append(split.id)
+            else:
+                paid_amt = amount - total
+                split.amount = split_amt - paid_amt
+                split.save()
+                total += paid_amt
+                updated.append(split.id)
+                break
+
+        return JsonResponse({
+            'message': f'Settled ₹{float(total)} from {owed_by_upi} to {owed_to_upi}',
+            'bill_splits_settled': updated
+        })
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
