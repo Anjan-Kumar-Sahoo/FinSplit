@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pool Summary - FinSplit</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        input { padding: 8px; width: 200px; margin-right: 10px; }
+        table { border-collapse: collapse; margin-top: 20px; width: 100%; max-width: 700px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        #error { color: red; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h2>💬 Pool Summary</h2>
+
+    <form id="pool-form">
+        <label for="pool_id">Enter Pool ID:</label>
+        <input type="number" id="pool_id" required>
+        <button type="submit">Load Summary</button>
+    </form>
+
+    <div id="summary-container"></div>
+    <p id="error"></p>
+
+    <script>
+        document.getElementById("pool-form").addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const poolId = document.getElementById("pool_id").value;
+            const res = await fetch(`/pool/${poolId}/summary`);
+
+            const container = document.getElementById("summary-container");
+            container.innerHTML = "";
+            document.getElementById("error").innerText = "";
+
+            if (res.ok) {
+                const data = await res.json();
+                if (!data.summary || data.summary.length === 0) {
+                    container.innerHTML = "<p>No dues found for this pool.</p>";
+                    return;
+                }
+
+                const table = document.createElement("table");
+                table.innerHTML = `
+                    <tr>
+                        <th>Owed By</th>
+                        <th>Owed To</th>
+                        <th>Amount (₹)</th>
+                        <th>Bill Title</th>
+                    </tr>
+                `;
+
+                data.summary.forEach(entry => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${entry.owed_by}</td>
+                        <td>${entry.owed_to}</td>
+                        <td>${entry.amount}</td>
+                        <td>${entry.bill_title}</td>
+                    `;
+                    table.appendChild(row);
+                });
+
+                container.innerHTML = `<h3>Pool: ${data.pool}</h3>`;
+                container.appendChild(table);
+            } else {
+                const err = await res.json();
+                document.getElementById("error").innerText = err.error || "Failed to fetch summary.";
+            }
+        });
+    </script>
+</body>
+</html>

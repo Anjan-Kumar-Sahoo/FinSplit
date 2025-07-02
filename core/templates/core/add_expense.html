@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add Expense | FinSplit</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 700px;
+      margin: auto;
+    }
+    input, select, textarea {
+      padding: 10px;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+    label {
+      font-weight: bold;
+    }
+    .btn {
+      background-color: #28a745;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      cursor: pointer;
+    }
+    .btn:hover {
+      background-color: #218838;
+    }
+    #response {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>➕ Add New Expense</h2>
+
+  <form id="expense-form">
+    <label>Title:</label>
+    <input type="text" id="title" required>
+
+    <label>Amount (₹):</label>
+    <input type="number" step="0.01" id="amount" required>
+
+    <label>Paid by (UPI ID):</label>
+    <input type="text" id="paid_by" placeholder="e.g., ak@upi" required>
+
+    <label>Pool ID:</label>
+    <input type="number" id="pool_id" required>
+
+    <label>Split Method:</label>
+    <select id="split_method" required>
+      <option value="equal">Equal</option>
+      <option value="percent">Percent</option>
+      <option value="manual">Manual</option>
+    </select>
+
+    <label>Split Between (comma-separated UPI IDs):</label>
+    <input type="text" id="split_upi_ids" placeholder="e.g., ak@upi, rahul@upi, makku@upi">
+
+    <label>If manual or percent, enter matching amounts (comma-separated):</label>
+    <input type="text" id="split_amounts" placeholder="e.g., 100, 100, 130">
+
+    <button type="submit" class="btn">Add Expense</button>
+  </form>
+
+  <div id="response"></div>
+
+  <script>
+    document.getElementById("expense-form").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const title = document.getElementById("title").value;
+      const amount = document.getElementById("amount").value;
+      const paid_by = document.getElementById("paid_by").value;
+      const pool_id = document.getElementById("pool_id").value;
+      const split_method = document.getElementById("split_method").value;
+      const upi_ids = document.getElementById("split_upi_ids").value.split(",").map(s => s.trim());
+      const split_amounts_raw = document.getElementById("split_amounts").value.split(",").map(s => s.trim());
+
+      const splits = upi_ids.map((upi, i) => {
+        return {
+          upi_id: upi,
+          amount: split_method === "equal" ? "" : split_amounts_raw[i]
+        };
+      });
+
+      const payload = {
+        title,
+        amount,
+        paid_by,
+        pool_id,
+        split_method,
+        splits
+      };
+
+      const res = await fetch("/add-expense/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const msg = document.getElementById("response");
+      const data = await res.json();
+
+      if (res.ok) {
+        msg.style.color = "green";
+        msg.innerText = data.message || "Expense added successfully ✅";
+      } else {
+        msg.style.color = "red";
+        msg.innerText = data.error || "Something went wrong ❌";
+      }
+    });
+  </script>
+</body>
+</html>

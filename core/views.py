@@ -12,6 +12,7 @@ def add_expense(request):
         return JsonResponse({'error': 'POST method required'}, status=405)
 
     try:
+        print("🔵 Raw Data:", request.body)
         data = json.loads(request.body)
         title = data['title']
         amount = float(data['amount'])
@@ -20,8 +21,15 @@ def add_expense(request):
         split_method = data['split_method']
         splits = data['splits']
 
-        paid_by = User.objects.get(upi_id=paid_by_upi)
-        pool = Pool.objects.get(id=pool_id)
+        try:
+            paid_by = User.objects.get(upi_id=paid_by_upi)
+        except User.DoesNotExist:
+            return JsonResponse({'error': f'User {paid_by_upi} not found'}, status=404)
+
+        try:
+            pool = Pool.objects.get(id=pool_id)
+        except Pool.DoesNotExist:
+            return JsonResponse({'error': f'Pool with id {pool_id} not found'}, status=404)
 
         bill = Bill.objects.create(
             pool=pool,
@@ -35,7 +43,13 @@ def add_expense(request):
         if split_method == 'equal':
             share = round(amount / len(splits), 2)
             for person in splits:
-                user = User.objects.get(upi_id=person['upi_id'])
+                upi = person.get('upi_id')
+                if not upi:
+                    continue
+                try:
+                    user = User.objects.get(upi_id=upi)
+                except User.DoesNotExist:
+                    return JsonResponse({'error': f'User {upi} not found'}, status=404)
                 if user != paid_by:
                     BillSplit.objects.create(
                         bill=bill,
@@ -46,7 +60,10 @@ def add_expense(request):
 
         elif split_method == 'percent':
             for person in splits:
-                user = User.objects.get(upi_id=person['upi_id'])
+                try:
+                    user = User.objects.get(upi_id=person['upi_id'])
+                except User.DoesNotExist:
+                    return JsonResponse({'error': f'User {person["upi_id"]} not found'}, status=404)
                 percent = float(person['amount'])  # amount = percent here
                 split_amt = round((percent / 100) * amount, 2)
                 total_split += split_amt
@@ -60,7 +77,10 @@ def add_expense(request):
 
         elif split_method == 'manual':
             for person in splits:
-                user = User.objects.get(upi_id=person['upi_id'])
+                try:
+                    user = User.objects.get(upi_id=person['upi_id'])
+                except User.DoesNotExist:
+                    return JsonResponse({'error': f'User {person["upi_id"]} not found'}, status=404)
                 split_amt = float(person['amount'])
                 total_split += split_amt
                 if user != paid_by:
@@ -174,8 +194,15 @@ def add_pool_member(request):
         if not verify_upi_id(upi_id):
             return JsonResponse({'error': 'Invalid UPI ID'}, status=400)
 
-        user = User.objects.get(upi_id=upi_id)
-        pool = Pool.objects.get(id=pool_id)
+        try:
+            user = User.objects.get(upi_id=upi_id)
+        except User.DoesNotExist:
+            return JsonResponse({'error': f'User {upi_id} not found'}, status=404)
+
+        try:
+            pool = Pool.objects.get(id=pool_id)
+        except Pool.DoesNotExist:
+            return JsonResponse({'error': f'Pool with id {pool_id} not found'}, status=404)
 
         PoolMember.objects.get_or_create(user=user, pool=pool)
 
@@ -197,8 +224,15 @@ def settle_debt(request):
         owed_to_upi = data.get('owed_to')
         amount = Decimal(str(data.get('amount')))
 
-        owed_by = User.objects.get(upi_id=owed_by_upi)
-        owed_to = User.objects.get(upi_id=owed_to_upi)
+        try:
+            owed_by = User.objects.get(upi_id=owed_by_upi)
+        except User.DoesNotExist:
+            return JsonResponse({'error': f'User {owed_by_upi} not found'}, status=404)
+
+        try:
+            owed_to = User.objects.get(upi_id=owed_to_upi)
+        except User.DoesNotExist:
+            return JsonResponse({'error': f'User {owed_to_upi} not found'}, status=404)
 
         splits = BillSplit.objects.filter(
             owed_by=owed_by,
@@ -235,3 +269,9 @@ def settle_debt(request):
 
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+def add_expense_page(request):
+    return render(request, 'core/add_expense.html')
+
+def pool_summary_page(request):
+    return render(request, 'core/pool_summary.html')

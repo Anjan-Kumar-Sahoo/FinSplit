@@ -8,5 +8,8 @@ urlpatterns = [
     path('create-user/', views.create_user),
     path('add-pool-member/', views.add_pool_member),
     path('settle-debt/', views.settle_debt),
+    path('add-expense-form/', views.add_expense_page, name='add-expense-page'),
+    path('pool-summary/', views.pool_summary_page, name='pool-summary-page'),
+
 
 ]
