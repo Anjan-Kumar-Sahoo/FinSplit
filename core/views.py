@@ -289,3 +289,5 @@ def user_summary_page(request):
 def settle_debt_page(request):
     return render(request, 'core/settle_dues.html')
 
+def home(request):
+    return render(request, 'core/home.html')
