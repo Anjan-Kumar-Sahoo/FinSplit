@@ -13,7 +13,8 @@ urlpatterns = [
     path('pool-summary/<int:pool_id>/', views.get_pool_summary, name='pool-summary'),
     path('user-summary-form/', views.user_summary_page, name='user-summary-page'),
     path('user-summary/<str:upi_id>/', views.get_user_summary, name='user-summary'),
-
-
+     path('settle-dues-form/', views.settle_debt_page, name='settle-debt-form'),
+    path('settle/', views.settle_debt, name='settle-debt'),
+    
 
 ]

@@ -5,6 +5,8 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
 from .models import User, Pool, Bill, BillSplit, PoolMember
+from decimal import Decimal
+
 
 @csrf_exempt
 def add_expense(request):
@@ -211,65 +213,70 @@ def add_pool_member(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-from decimal import Decimal
 
 @csrf_exempt
 def settle_debt(request):
     if request.method != 'POST':
-        return JsonResponse({'error': 'POST required'}, status=405)
+        return JsonResponse({'error': 'Only POST allowed'}, status=405)
 
     try:
         data = json.loads(request.body)
-        owed_by_upi = data.get('owed_by')
-        owed_to_upi = data.get('owed_to')
-        amount = Decimal(str(data.get('amount')))
 
-        try:
-            owed_by = User.objects.get(upi_id=owed_by_upi)
-        except User.DoesNotExist:
-            return JsonResponse({'error': f'User {owed_by_upi} not found'}, status=404)
+        from_upi = data.get('from_upi')
+        to_upi = data.get('to_upi')
+        amount_raw = data.get('amount')
 
-        try:
-            owed_to = User.objects.get(upi_id=owed_to_upi)
-        except User.DoesNotExist:
-            return JsonResponse({'error': f'User {owed_to_upi} not found'}, status=404)
+        if not from_upi or not to_upi or not amount_raw:
+            return JsonResponse({'error': 'from_upi, to_upi, and amount are required'}, status=400)
 
-        splits = BillSplit.objects.filter(
-            owed_by=owed_by,
-            owed_to=owed_to,
+        amount_to_settle = Decimal(str(amount_raw))
+        remaining = amount_to_settle
+
+        from_user = User.objects.filter(upi_id=from_upi).first()
+        to_user = User.objects.filter(upi_id=to_upi).first()
+
+        if not from_user:
+            return JsonResponse({'error': f'User {from_upi} not found'}, status=404)
+        if not to_user:
+            return JsonResponse({'error': f'User {to_upi} not found'}, status=404)
+
+        unsettled_splits = BillSplit.objects.filter(
+            owed_by=from_user,
+            owed_to=to_user,
             is_settled=False
-        ).order_by('id')
+        ).order_by('amount')
 
-        total = Decimal('0')
-        updated = []
+        if not unsettled_splits.exists():
+            return JsonResponse({'error': 'No unsettled dues found'}, status=400)
 
-        for split in splits:
-            if total >= amount:
+        settled_ids = []
+
+        for split in unsettled_splits:
+            if remaining <= 0:
                 break
 
-            split_amt = Decimal(str(split.amount))
-
-            if total + split_amt <= amount:
+            if remaining >= split.amount:
+                remaining -= split.amount
+                split.amount = Decimal('0.00')
                 split.is_settled = True
-                split.save()
-                total += split_amt
-                updated.append(split.id)
             else:
-                paid_amt = amount - total
-                split.amount = split_amt - paid_amt
-                split.save()
-                total += paid_amt
-                updated.append(split.id)
-                break
+                split.amount -= remaining
+                remaining = Decimal('0.00')
+
+            split.save()
+            settled_ids.append(split.id)
+
+        settled_amount = amount_to_settle - remaining
 
         return JsonResponse({
-            'message': f'Settled ₹{float(total)} from {owed_by_upi} to {owed_to_upi}',
-            'bill_splits_settled': updated
+            'message': f'Settled ₹{settled_amount:.2f} from {from_upi} to {to_upi}',
+            'bill_splits_settled': settled_ids
         })
 
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
+   
 def add_expense_page(request):
     return render(request, 'core/add_expense.html')
 
@@ -278,4 +285,7 @@ def pool_summary_page(request):
 
 def user_summary_page(request):
     return render(request, 'core/user_summary.html')
+
+def settle_debt_page(request):
+    return render(request, 'core/settle_dues.html')
 
