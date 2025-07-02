@@ -275,3 +275,7 @@ def add_expense_page(request):
 
 def pool_summary_page(request):
     return render(request, 'core/pool_summary.html')
+
+def user_summary_page(request):
+    return render(request, 'core/user_summary.html')
+

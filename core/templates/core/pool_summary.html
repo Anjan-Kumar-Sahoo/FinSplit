@@ -1,73 +1,57 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Pool Summary - FinSplit</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        input { padding: 8px; width: 200px; margin-right: 10px; }
-        table { border-collapse: collapse; margin-top: 20px; width: 100%; max-width: 700px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        #error { color: red; margin-top: 10px; }
-    </style>
+  <title>Pool Summary | FinSplit</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 700px; margin: auto; }
+    input, button { padding: 10px; margin: 5px 0; width: 100%; }
+    .btn { background-color: #17a2b8; color: white; border: none; cursor: pointer; }
+    .btn:hover { background-color: #138496; }
+    h3 { margin-top: 30px; }
+    ul { list-style: none; padding-left: 0; }
+    li { margin-bottom: 8px; }
+  </style>
 </head>
 <body>
-    <h2>💬 Pool Summary</h2>
+  <h2>🏘️ Pool Summary</h2>
 
-    <form id="pool-form">
-        <label for="pool_id">Enter Pool ID:</label>
-        <input type="number" id="pool_id" required>
-        <button type="submit">Load Summary</button>
-    </form>
+  <form id="pool-form">
+    <label for="pool_id"><strong>Enter Pool ID:</strong></label>
+    <input type="number" id="pool_id" required>
+    <button type="submit" class="btn">Get Summary</button>
+  </form>
 
-    <div id="summary-container"></div>
-    <p id="error"></p>
+  <div id="pool-summary-output"></div>
 
-    <script>
-        document.getElementById("pool-form").addEventListener("submit", async function (e) {
-            e.preventDefault();
-            const poolId = document.getElementById("pool_id").value;
-            const res = await fetch(`/pool/${poolId}/summary`);
+  <script>
+    document.getElementById("pool-form").addEventListener("submit", async function (e) {
+      e.preventDefault();
 
-            const container = document.getElementById("summary-container");
-            container.innerHTML = "";
-            document.getElementById("error").innerText = "";
+      const pool_id = document.getElementById("pool_id").value.trim();
+      const output = document.getElementById("pool-summary-output");
+      output.innerHTML = "Loading...";
 
-            if (res.ok) {
-                const data = await res.json();
-                if (!data.summary || data.summary.length === 0) {
-                    container.innerHTML = "<p>No dues found for this pool.</p>";
-                    return;
-                }
+      const res = await fetch(`/pool-summary/${pool_id}/`);
+      const data = await res.json();
 
-                const table = document.createElement("table");
-                table.innerHTML = `
-                    <tr>
-                        <th>Owed By</th>
-                        <th>Owed To</th>
-                        <th>Amount (₹)</th>
-                        <th>Bill Title</th>
-                    </tr>
-                `;
+      if (res.ok) {
+        let html = `<h3>Summary for Pool: ${data.pool}</h3><ul>`;
 
-                data.summary.forEach(entry => {
-                    const row = document.createElement("tr");
-                    row.innerHTML = `
-                        <td>${entry.owed_by}</td>
-                        <td>${entry.owed_to}</td>
-                        <td>${entry.amount}</td>
-                        <td>${entry.bill_title}</td>
-                    `;
-                    table.appendChild(row);
-                });
+        if (data.summary.length === 0) {
+          html += `<li>No unsettled dues in this pool.</li>`;
+        } else {
+          data.summary.forEach(item => {
+            html += `<li><strong>${item.owed_by}</strong> owes <strong>${item.owed_to}</strong> ₹${item.amount} for <em>${item.bill_title}</em></li>`;
+          });
+        }
 
-                container.innerHTML = `<h3>Pool: ${data.pool}</h3>`;
-                container.appendChild(table);
-            } else {
-                const err = await res.json();
-                document.getElementById("error").innerText = err.error || "Failed to fetch summary.";
-            }
-        });
-    </script>
+        html += `</ul>`;
+        output.innerHTML = html;
+
+      } else {
+        output.innerHTML = `<p style="color:red;">${data.error}</p>`;
+      }
+    });
+  </script>
 </body>
 </html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User Summary | FinSplit</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 700px; margin: auto; }
+    input, button { padding: 10px; margin: 5px 0; width: 100%; }
+    .btn { background-color: #007bff; color: white; border: none; cursor: pointer; }
+    .btn:hover { background-color: #0056b3; }
+    h3 { margin-top: 30px; }
+    ul { list-style: none; padding-left: 0; }
+    li { margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <h2>📋 User Summary</h2>
+
+  <form id="summary-form">
+    <label for="upi_id"><strong>Enter your UPI ID:</strong></label>
+    <input type="text" id="upi_id" placeholder="e.g., ak@upi" required>
+    <button type="submit" class="btn">Get Summary</button>
+  </form>
+
+  <div id="summary-output"></div>
+
+  <script>
+    document.getElementById("summary-form").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const upi_id = document.getElementById("upi_id").value.trim();
+      const output = document.getElementById("summary-output");
+      output.innerHTML = "Loading...";
+
+      const res = await fetch(`/user-summary/${upi_id}/`);
+      const data = await res.json();
+
+      if (res.ok) {
+        let html = `<h3>Summary for ${upi_id}</h3>`;
+
+        html += "<h4>🔴 Owes To:</h4><ul>";
+        if (data.owes_to.length === 0) html += "<li>Nothing owed</li>";
+        else {
+          data.owes_to.forEach(item => {
+            html += `<li>To <strong>${item.to}</strong>: ₹${item.amount} for <em>${item.bill}</em></li>`;
+          });
+        }
+        html += "</ul>";
+
+        html += "<h4>🟢 Gets From:</h4><ul>";
+        if (data.gets_from.length === 0) html += "<li>No one owes you</li>";
+        else {
+          data.gets_from.forEach(item => {
+            html += `<li>From <strong>${item.from}</strong>: ₹${item.amount} for <em>${item.bill}</em></li>`;
+          });
+        }
+        html += "</ul>";
+
+        output.innerHTML = html;
+      } else {
+        output.innerHTML = `<p style="color:red;">${data.error}</p>`;
+      }
+    });
+  </script>
+</body>
+</html>

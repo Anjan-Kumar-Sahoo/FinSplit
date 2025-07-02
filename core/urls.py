@@ -9,7 +9,11 @@ urlpatterns = [
     path('add-pool-member/', views.add_pool_member),
     path('settle-debt/', views.settle_debt),
     path('add-expense-form/', views.add_expense_page, name='add-expense-page'),
-    path('pool-summary/', views.pool_summary_page, name='pool-summary-page'),
+    path('pool-summary-form/', views.pool_summary_page, name='pool-summary-form'),
+    path('pool-summary/<int:pool_id>/', views.get_pool_summary, name='pool-summary'),
+    path('user-summary-form/', views.user_summary_page, name='user-summary-page'),
+    path('user-summary/<str:upi_id>/', views.get_user_summary, name='user-summary'),
+
 
 
 ]
