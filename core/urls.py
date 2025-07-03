@@ -16,5 +16,9 @@ urlpatterns = [
     path('settle-dues-form/', views.settle_debt_page, name='settle-debt-form'),
     path('settle/', views.settle_debt, name='settle-debt'),
     path('', views.home, name='home'),
+    path('create-user-form/', views.create_user_page),
+    path('create-pool-form/', views.create_pool_page),
+    path('add-pool-member-form/', views.add_pool_member_page),
+
 
 ]

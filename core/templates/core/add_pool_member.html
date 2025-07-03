@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add Pool Member</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f7f7f7;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .form-container {
+      background-color: #ffffff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      width: 350px;
+      text-align: center;
+    }
+    h2 { margin-bottom: 20px; }
+    input, button {
+      width: 100%; padding: 10px; margin: 10px 0;
+      font-size: 1rem; border: 1px solid #ccc; border-radius: 8px;
+    }
+    button {
+      background-color: #4CAF50; color: white;
+      border: none; cursor: pointer;
+    }
+    button:hover { background-color: #45a049; }
+    #response { margin-top: 15px; font-size: 0.9rem; color: #333; word-wrap: break-word; }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>👥 Add Pool Member</h2>
+    <form onsubmit="submitForm(event)">
+      <input type="text" id="upi_id" placeholder="Member's UPI ID" required>
+      <input type="number" id="pool_id" placeholder="Pool ID" required>
+      <button type="submit">Add Member</button>
+    </form>
+    <div id="response"></div>
+  </div>
+  <script>
+    async function submitForm(e) {
+      e.preventDefault();
+      const upi_id = document.getElementById('upi_id').value;
+      const pool_id = document.getElementById('pool_id').value;
+      const res = await fetch('/add-pool-member/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ upi_id, pool_id })
+      });
+      const data = await res.json();
+      document.getElementById('response').innerText = JSON.stringify(data, null, 2);
+    }
+  </script>
+</body>
+</html>

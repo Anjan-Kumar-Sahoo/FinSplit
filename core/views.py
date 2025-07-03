@@ -291,3 +291,12 @@ def settle_debt_page(request):
 
 def home(request):
     return render(request, 'core/home.html')
+
+def create_user_page(request):
+    return render(request, 'core/create_user.html')
+
+def create_pool_page(request):
+    return render(request, 'core/create_pool.html')
+
+def add_pool_member_page(request):
+    return render(request, 'core/add_pool_member.html')

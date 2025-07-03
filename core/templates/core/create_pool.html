@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Create Pool</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f7f7f7;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .form-container {
+      background-color: #ffffff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      width: 350px;
+      text-align: center;
+    }
+    h2 { margin-bottom: 20px; }
+    input, button {
+      width: 100%; padding: 10px; margin: 10px 0;
+      font-size: 1rem; border: 1px solid #ccc; border-radius: 8px;
+    }
+    button {
+      background-color: #4CAF50; color: white;
+      border: none; cursor: pointer;
+    }
+    button:hover { background-color: #45a049; }
+    #response { margin-top: 15px; font-size: 0.9rem; color: #333; word-wrap: break-word; }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>🏠 Create Pool</h2>
+    <form onsubmit="submitForm(event)">
+      <input type="text" id="pool_name" placeholder="Pool Name" required>
+      <input type="text" id="creator_upi" placeholder="Creator UPI ID" required>
+      <button type="submit">Create Pool</button>
+    </form>
+    <div id="response"></div>
+  </div>
+  <script>
+    async function submitForm(e) {
+      e.preventDefault();
+      const pool_name = document.getElementById('pool_name').value;
+      const creator_upi = document.getElementById('creator_upi').value;
+      const res = await fetch('/create-pool/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: pool_name,
+          created_by: creator_upi
+        })
+      });
+      const data = await res.json();
+      document.getElementById('response').innerText = JSON.stringify(data, null, 2);
+    }
+  </script>
+</body>
+</html>
