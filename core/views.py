@@ -300,3 +300,12 @@ def create_pool_page(request):
 
 def add_pool_member_page(request):
     return render(request, 'core/add_pool_member.html')
+
+def show_all_pools(request):
+    pools = Pool.objects.all()
+    return render(request, 'core/show_pools.html', {'pools': pools})
+
+def show_all_users(request):
+    users = User.objects.all()
+    return render(request, 'core/show_users.html', {'users': users})
+

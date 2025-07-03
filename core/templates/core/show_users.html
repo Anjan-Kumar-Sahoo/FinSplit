@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>All Users - FinSplit</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #f2f2f2;
+      padding: 20px;
+      text-align: center;
+    }
+    h2 {
+      color: #4CAF50;
+    }
+    .user-card {
+      display: inline-block;
+      background: white;
+      padding: 15px 25px;
+      margin: 10px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .btn {
+      margin-top: 30px;
+      display: inline-block;
+      background: #4CAF50;
+      color: white;
+      padding: 10px 20px;
+      text-decoration: none;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h2>👥 All Registered Users</h2>
+  {% for user in users %}
+    <div class="user-card">
+      UPI ID: <strong>{{ user.upi_id }}</strong><br>
+      Created on: {{ user.created_at }}
+    </div>
+  {% empty %}
+    <p>No users registered yet.</p>
+  {% endfor %}
+  <br><br>
+  <a href="/" class="btn">🏠 Chalo Wapis Dashboard Chalte Hai</a>
+</body>
+</html>

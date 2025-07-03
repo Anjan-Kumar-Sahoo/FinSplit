@@ -19,6 +19,8 @@ urlpatterns = [
     path('create-user-form/', views.create_user_page),
     path('create-pool-form/', views.create_pool_page),
     path('add-pool-member-form/', views.add_pool_member_page),
+    path('all-pools/', views.show_all_pools, name='show_all_pools'),
+    path('all-users/', views.show_all_users, name='show_all_users'),
 
 
 ]
