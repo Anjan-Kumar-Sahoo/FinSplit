@@ -3,28 +3,89 @@
 <head>
   <title>Pool Summary | FinSplit</title>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; max-width: 700px; margin: auto; }
-    input, button { padding: 10px; margin: 5px 0; width: 100%; }
-    .btn { background-color: #17a2b8; color: white; border: none; cursor: pointer; }
-    .btn:hover { background-color: #138496; }
-    h3 { margin-top: 30px; }
-    ul { list-style: none; padding-left: 0; }
-    li { margin-bottom: 8px; }
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 700px;
+      margin: auto;
+      background-color: #f9f9f9;
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    input, button {
+      padding: 10px;
+      margin: 8px 0;
+      width: 100%;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #17a2b8;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #138496;
+    }
+
+    .section {
+      margin-top: 30px;
+    }
+
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    li {
+      margin-bottom: 10px;
+      background: #fff;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    }
+
+    hr {
+      margin: 30px 0;
+    }
+
+    .btn-dashboard {
+      display: inline-block;
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 16px;
+      text-decoration: none;
+      border-radius: 8px;
+      margin-top: 20px;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+    }
+
+    .btn-dashboard:hover {
+      background-color: #388e3c;
+    }
   </style>
 </head>
 <body>
+
   <h2>🏘️ Pool Summary</h2>
 
   <form id="pool-form">
     <label for="pool_id"><strong>Enter Pool ID:</strong></label>
     <input type="number" id="pool_id" required>
-    <button type="submit" class="btn">Get Summary</button>
+    <button type="submit">Get Summary</button>
   </form>
 
-<a href="/" style="display:inline-block;background-color:#4CAF50;color:white;padding:10px 16px;text-decoration:none;border-radius:8px;margin-top:20px;font-weight:bold;transition:background-color 0.3s ease;">🏠 Chalo Wapis Dashboard Chalte Hai</a>
+  <div id="pool-summary-output" class="section"></div>
 
-
-  <div id="pool-summary-output"></div>
+  <a href="/" class="btn-dashboard">🏠 Chalo Wapis Dashboard Chalte Hai</a>
 
   <script>
     document.getElementById("pool-form").addEventListener("submit", async function (e) {
@@ -34,27 +95,41 @@
       const output = document.getElementById("pool-summary-output");
       output.innerHTML = "Loading...";
 
-      const res = await fetch(`/pool-summary/${pool_id}/`);
-      const data = await res.json();
+      try {
+        const res = await fetch(`/pool-summary/${pool_id}/`);
+        const data = await res.json();
 
-      if (res.ok) {
-        let html = `<h3>Summary for Pool: ${data.pool}</h3><ul>`;
+        if (res.ok) {
+          let html = `<h3>🔷 Unsettled Dues for Pool: ${data.pool}</h3><ul>`;
 
-        if (data.summary.length === 0) {
-          html += `<li>No unsettled dues in this pool.</li>`;
+          if (data.unsettled.length === 0) {
+            html += `<li>No unsettled dues.</li>`;
+          } else {
+            data.unsettled.forEach(item => {
+              html += `<li><strong>${item.owed_by}</strong> owes <strong>${item.owed_to}</strong> ₹${item.amount} for <em>${item.bill_title}</em></li>`;
+            });
+          }
+
+          html += `</ul><hr><h3>✅ Settled Transactions</h3><ul>`;
+
+          if (data.settled.length === 0) {
+            html += `<li>No settled records.</li>`;
+          } else {
+            data.settled.forEach(item => {
+              html += `<li><strong>${item.owed_by}</strong> paid <strong>${item.owed_to}</strong> ₹${item.amount} for <em>${item.bill_title}</em> on <em>${item.settled_on}</em></li>`;
+            });
+          }
+
+          html += `</ul>`;
+          output.innerHTML = html;
         } else {
-          data.summary.forEach(item => {
-            html += `<li><strong>${item.owed_by}</strong> owes <strong>${item.owed_to}</strong> ₹${item.amount} for <em>${item.bill_title}</em></li>`;
-          });
+          output.innerHTML = `<p style="color:red;">${data.error}</p>`;
         }
-
-        html += `</ul>`;
-        output.innerHTML = html;
-
-      } else {
-        output.innerHTML = `<p style="color:red;">${data.error}</p>`;
+      } catch (err) {
+        output.innerHTML = `<p style="color:red;">Something went wrong.</p>`;
       }
     });
   </script>
+
 </body>
 </html>

@@ -309,3 +309,38 @@ def show_all_users(request):
     users = User.objects.all()
     return render(request, 'core/show_users.html', {'users': users})
 
+def get_pool_summary(request, pool_id):
+    try:
+        pool = Pool.objects.get(id=pool_id)
+
+        unsettled = BillSplit.objects.filter(bill__pool=pool, is_settled=False)
+        settled = BillSplit.objects.filter(bill__pool=pool, is_settled=True)
+
+        summary_unsettled = []
+        summary_settled = []
+
+        for split in unsettled:
+            summary_unsettled.append({
+                "owed_by": split.owed_by.upi_id,
+                "owed_to": split.owed_to.upi_id,
+                "amount": float(split.amount),
+                "bill_title": split.bill.title
+            })
+
+        for split in settled:
+            summary_settled.append({
+                "owed_by": split.owed_by.upi_id,
+                "owed_to": split.owed_to.upi_id,
+                "amount": float(split.amount),
+                "bill_title": split.bill.title,
+                "settled_on": split.bill.created_at.strftime('%d-%b-%Y')
+            })
+
+        return JsonResponse({
+            "pool": pool.name,
+            "unsettled": summary_unsettled,
+            "settled": summary_settled
+        })
+
+    except Pool.DoesNotExist:
+        return JsonResponse({"error": "Pool not found"}, status=404)

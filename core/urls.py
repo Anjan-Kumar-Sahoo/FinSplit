@@ -21,6 +21,7 @@ urlpatterns = [
     path('add-pool-member-form/', views.add_pool_member_page),
     path('all-pools/', views.show_all_pools, name='show_all_pools'),
     path('all-users/', views.show_all_users, name='show_all_users'),
-
+    path('pool-summary-form/', views.pool_summary_page, name='pool-summary-form'),   # ✅ HTML Form Page
+    path('pool-summary/<int:pool_id>/', views.get_pool_summary, name='pool-summary'), # ✅ API
 
 ]
