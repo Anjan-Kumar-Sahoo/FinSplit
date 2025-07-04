@@ -9,8 +9,8 @@ class User(models.Model):
         return f"{self.full_name} ({self.upi_id})"
 
 class Pool(models.Model):
-    name = models.CharField(max_length=100)
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='pools')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -39,6 +39,7 @@ class BillSplit(models.Model):
     owed_by = models.ForeignKey(User, related_name='owes', on_delete=models.CASCADE)
     owed_to = models.ForeignKey(User, related_name='gets', on_delete=models.CASCADE)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+    settled_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # ✅ Add this line
     is_settled = models.BooleanField(default=False)
 
     def __str__(self):

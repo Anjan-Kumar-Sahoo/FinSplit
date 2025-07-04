@@ -6,7 +6,7 @@
     body {
       font-family: Arial, sans-serif;
       padding: 20px;
-      max-width: 700px;
+      max-width: 800px;
       margin: auto;
       background-color: #f9f9f9;
     }
@@ -45,15 +45,15 @@
     }
 
     li {
-      margin-bottom: 10px;
+      margin-bottom: 15px;
       background: #fff;
-      padding: 10px;
+      padding: 15px;
       border-radius: 8px;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
     }
 
     hr {
-      margin: 30px 0;
+      margin: 40px 0;
     }
 
     .btn-dashboard {
@@ -71,6 +71,36 @@
     .btn-dashboard:hover {
       background-color: #388e3c;
     }
+
+    .paid {
+      color: green;
+    }
+
+    .unpaid {
+      color: red;
+    }
+
+    .bill-title {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .status-tag {
+      font-weight: bold;
+      padding: 3px 8px;
+      border-radius: 5px;
+    }
+
+    .status-tag.fully {
+      background-color: #d4edda;
+      color: #155724;
+    }
+
+    .status-tag.partial {
+      background-color: #fff3cd;
+      color: #856404;
+    }
+
   </style>
 </head>
 <body>
@@ -110,15 +140,15 @@
             });
           }
 
-          html += `</ul><hr><h3>✅ Settled Transactions</h3><ul>`;
+          html += `<hr><h3>✅ Settled Transactions</h3><ul>`;
 
-          if (data.settled.length === 0) {
-            html += `<li>No settled records.</li>`;
-          } else {
-            data.settled.forEach(item => {
-              html += `<li><strong>${item.owed_by}</strong> paid <strong>${item.owed_to}</strong> ₹${item.amount} for <em>${item.bill_title}</em> on <em>${item.settled_on}</em></li>`;
-            });
-          }
+if (data.settled.length === 0) {
+  html += `<li>No settled records.</li>`;
+} else {
+  data.settled.forEach(item => {
+    html += `<li><strong>${item.owed_by}</strong> paid <strong>${item.owed_to}</strong> ₹${item.amount} for <em>${item.bill_title}</em> on <em>${item.settled_on}</em> — <strong>${item.status}</strong></li>`;
+  });
+}
 
           html += `</ul>`;
           output.innerHTML = html;

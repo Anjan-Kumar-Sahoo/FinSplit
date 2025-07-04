@@ -309,32 +309,46 @@ def show_all_users(request):
     users = User.objects.all()
     return render(request, 'core/show_users.html', {'users': users})
 
+
+from django.http import JsonResponse
+from django.db.models import Sum
+from .models import Pool, Bill, BillSplit
+
 def get_pool_summary(request, pool_id):
     try:
         pool = Pool.objects.get(id=pool_id)
 
+        # Unsettled Splits
         unsettled = BillSplit.objects.filter(bill__pool=pool, is_settled=False)
-        settled = BillSplit.objects.filter(bill__pool=pool, is_settled=True)
+        summary_unsettled = [
+            {
+                "owed_by": s.owed_by.upi_id,
+                "owed_to": s.owed_to.upi_id,
+                "amount": float(s.amount),
+                "bill_title": s.bill.title
+            }
+            for s in unsettled
+        ]
 
-        summary_unsettled = []
+        # Settled Splits (line by line)
         summary_settled = []
+        bills = Bill.objects.filter(pool=pool)
 
-        for split in unsettled:
-            summary_unsettled.append({
-                "owed_by": split.owed_by.upi_id,
-                "owed_to": split.owed_to.upi_id,
-                "amount": float(split.amount),
-                "bill_title": split.bill.title
-            })
+        for bill in bills:
+            splits = BillSplit.objects.filter(bill=bill)
+            total = splits.aggregate(Sum('amount'))['amount__sum'] or 0
+            paid = splits.filter(is_settled=True).aggregate(Sum('amount'))['amount__sum'] or 0
+            status = "Fully Settled" if paid == total else "Partially Settled"
 
-        for split in settled:
-            summary_settled.append({
-                "owed_by": split.owed_by.upi_id,
-                "owed_to": split.owed_to.upi_id,
-                "amount": float(split.amount),
-                "bill_title": split.bill.title,
-                "settled_on": split.bill.created_at.strftime('%d-%b-%Y')
-            })
+            for s in splits.filter(is_settled=True):
+                summary_settled.append({
+                    "owed_by": s.owed_by.upi_id,
+                    "owed_to": s.owed_to.upi_id,
+                    "amount": float(s.amount),
+                    "bill_title": bill.title,
+                    "settled_on": bill.created_at.strftime("%d-%b-%Y"),
+                    "status": status
+                })
 
         return JsonResponse({
             "pool": pool.name,
@@ -344,3 +358,36 @@ def get_pool_summary(request, pool_id):
 
     except Pool.DoesNotExist:
         return JsonResponse({"error": "Pool not found"}, status=404)
+
+import json
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .models import Pool, User  # Adjust this as per your model
+
+@csrf_exempt
+def create_pool(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            name = data.get("name")
+            upi_id = data.get("created_by")
+
+            if not name or not upi_id:
+                return JsonResponse({"error": "Missing name or UPI ID"}, status=400)
+
+            # Fetch user with given UPI (make sure UPI is unique in User model)
+            try:
+                creator = User.objects.get(upi_id=upi_id)
+            except User.DoesNotExist:
+                return JsonResponse({"error": "No user found with this UPI"}, status=404)
+
+            pool = Pool.objects.create(name=name, created_by=creator)
+            return JsonResponse({"message": "Pool created successfully", "pool_id": pool.id})
+
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Invalid method"}, status=405)
+
+def create_pool_page(request):
+    return render(request, 'core/create_pool.html')  # correct path
