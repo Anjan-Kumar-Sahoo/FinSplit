@@ -20,6 +20,16 @@
       margin: 10px;
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      text-align: left;
+      min-width: 250px;
+      position: relative;
+    }
+    .pool-id {
+      color: #4CAF50;
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin-bottom: 6px;
+      display: block;
     }
     .btn {
       margin-top: 30px;
@@ -30,19 +40,36 @@
       text-decoration: none;
       border-radius: 8px;
     }
+    .add-member-btn {
+      display: inline-block;
+      margin-top: 15px;
+      background-color: #2196F3;
+      color: white;
+      padding: 6px 12px;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    .add-member-btn:hover {
+      background-color: #1976D2;
+    }
   </style>
 </head>
 <body>
   <h2>📦 All Available Pools</h2>
+
   {% for pool in pools %}
     <div class="pool-card">
+      <span class="pool-id">Pool id - #{{ pool.id }}</span>
       <strong>{{ pool.name }}</strong><br>
       Created by: {{ pool.created_by.upi_id }}<br>
-      On: {{ pool.created_at }}
+      On: {{ pool.created_at|date:"d M Y, h:i A" }}<br>
     </div>
-  {% empty %}
+    {% empty %}
     <p>No pools created yet.</p>
-  {% endfor %}
+    {% endfor %}
+    
+    <a class="add-member-btn" href="/add-pool-member-form/">➕ Add Members</a>
   <br><br>
   <a href="/" class="btn">🏠 Chalo Wapis Dashboard Chalte Hai</a>
 </body>

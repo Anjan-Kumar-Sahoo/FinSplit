@@ -39,17 +39,18 @@
     }
 
     main {
-      padding: 40px 20px;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
       gap: 20px;
+      padding: 40px 20px;
       max-width: 1200px;
+      width: 100%;
+      justify-items: center;
     }
 
     .card {
       background-color: white;
-      width: 260px;
+      width: 240px;
       padding: 25px 20px;
       border-radius: 12px;
       text-align: center;
@@ -69,6 +70,13 @@
       margin-bottom: 10px;
     }
 
+    .row {
+      grid-column: span 4;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+
     footer {
       margin-top: 50px;
       padding: 10px;
@@ -84,55 +92,59 @@
     <p>Simplify your group expenses</p>
   </header>
 
-<main>
+  <main>
+    <!-- Row 1 - 4 Cards -->
+    <a href="/create-user-form/" class="card">
+      <div class="emoji">🧑</div>
+      <h3>Create New User</h3>
+    </a>
 
-  <a href="/create-user-form/" class="card">
-    <div class="emoji">🧑</div>
-    <h3>Create New User</h3>
-  </a>
+    <a href="/create-pool-form/" class="card">
+      <div class="emoji">➕</div>
+      <h3>Create New Pool</h3>
+    </a>
 
-  <a href="/create-pool-form/" class="card">
-  <div class="emoji">➕</div>
-  <h3>Create New Pool</h3>
-  </a>
+    <a href="/add-pool-member-form/" class="card">
+      <div class="emoji">➕👤</div>
+      <h3>Add Pool Member</h3>
+    </a>
 
-  <a href="/add-pool-member-form/" class="card">
-    <div class="emoji">➕👤</div>
-    <h3>Add Pool Member</h3>
-  </a>
+    <a href="/add-expense-form/" class="card">
+      <div class="emoji">➕</div>
+      <h3>Add New Expense</h3>
+    </a>
 
-  <a href="/add-expense-form/" class="card">
-    <div class="emoji">➕</div>
-    <h3>Add New Expense</h3>
-  </a>
-  
-  <a href="/pool-summary-form/" class="card">
-    <div class="emoji">👥</div>
-    <h3>Pool Summary</h3>
-  </a>
+    <!-- Row 2 - 3 Cards -->
+    <div class="row">
+      <a href="/pool-summary-form/" class="card">
+        <div class="emoji">👥</div>
+        <h3>Pool Summary</h3>
+      </a>
 
-  <a href="/user-summary-form/" class="card">
-    <div class="emoji">👤</div>
-    <h3>User Summary</h3>
-  </a>
+      <a href="/user-summary-form/" class="card">
+        <div class="emoji">👤</div>
+        <h3>User Summary</h3>
+      </a>
 
-  <a href="/settle-dues-form/" class="card">
-    <div class="emoji">💸</div>
-    <h3>Settle Dues</h3>
-  </a>
-  
-  <!-- ✅ New additions -->
-  <a href="/all-pools/" class="card">
-    <div class="emoji">📦</div>
-    <h3>View All Pools</h3>
-  </a>
+      <a href="/settle-dues-form/" class="card">
+        <div class="emoji">💸</div>
+        <h3>Settle Dues</h3>
+      </a>
+    </div>
 
-  <a href="/all-users/" class="card">
-    <div class="emoji">👥</div>
-    <h3>View All Users</h3>
-  </a>
-</main>
+    <!-- Row 3 - 2 Cards -->
+    <div class="row">
+      <a href="/all-pools/" class="card">
+        <div class="emoji">📦</div>
+        <h3>View All Pools</h3>
+      </a>
 
+      <a href="/all-users/" class="card">
+        <div class="emoji">👥</div>
+        <h3>View All Users</h3>
+      </a>
+    </div>
+  </main>
 
   <footer>
     &copy; 2025 FinSplit | Built with 💚 by AK
